@@ -71,6 +71,8 @@ export default function ShareFileScreen() {
 
       if (isWeb && file.file instanceof File) {
         formData.append('file', file.file, file.name);
+      } else if (isWeb && file instanceof File) {
+        formData.append('file', file, file.name);
       } else {
         formData.append('file', {
           uri: file.uri,
@@ -90,12 +92,15 @@ export default function ShareFileScreen() {
       formData.append('taille', `${size}`);
       formData.append('user', '/api/users/1');
 
-      console.log('FormData prêt à l\'envoi:', formData);
+      if (isWeb) {
+        for (const pair of (formData as any).entries()) {
+          console.log('FormData:', pair[0], pair[1]);
+        }
+      }
 
       await apiFetch('/fichiers', {
         method: 'POST',
         body: formData,
-        // Ne PAS mettre de headers ici !
       });
 
       Alert.alert('Succès', 'Fichier partagé avec succès.');
