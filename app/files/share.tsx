@@ -42,6 +42,8 @@ export default function ShareFileScreen() {
     }
   };
 
+  const isWeb = Platform.OS === 'web';
+
   const handleShareFile = async () => {
     console.log('Tentative de partage du fichier:', file);
     if (!file || !file.name || !file.uri) {
@@ -65,7 +67,8 @@ export default function ShareFileScreen() {
 
     setLoading(true);
     try {
-      const formData = new FormData();
+      // Utilise le FormData natif du navigateur sur le web
+      const formData = isWeb ? new window.FormData() : new FormData();
       formData.append('file', {
         uri: file.uri,
         name: file.name,
@@ -87,6 +90,7 @@ export default function ShareFileScreen() {
       await apiFetch('/fichiers', {
         method: 'POST',
         body: formData,
+        // Ne PAS mettre de headers ici !
       });
 
       Alert.alert('Succès', 'Fichier partagé avec succès.');
