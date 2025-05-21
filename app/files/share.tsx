@@ -70,8 +70,6 @@ export default function ShareFileScreen() {
       const isWeb = Platform.OS === 'web';
       const formData = isWeb ? new window.FormData() : new FormData();
 
-      // --- Correction principale ---
-      // Sur le web, il faut absolument envoyer un objet File natif JS dans le champ 'file'
       if (isWeb && file.file instanceof File) {
         formData.append('file', file.file, file.name);
       } else if (isWeb && file instanceof File) {
