@@ -67,7 +67,6 @@ export default function ShareFileScreen() {
 
     setLoading(true);
     try {
-      // Utilise le FormData natif du navigateur sur le web
       const formData = isWeb ? new window.FormData() : new FormData();
       formData.append('file', {
         uri: file.uri,
@@ -84,13 +83,13 @@ export default function ShareFileScreen() {
       formData.append('date_envoi', new Date().toISOString());
       formData.append('extension', ext);
       formData.append('taille', `${size}`);
+      formData.append('user', '/api/users/1');
 
       console.log('FormData prêt à l\'envoi:', formData);
 
       await apiFetch('/fichiers', {
         method: 'POST',
         body: formData,
-        // Ne PAS mettre de headers ici !
       });
 
       Alert.alert('Succès', 'Fichier partagé avec succès.');
@@ -138,7 +137,6 @@ export default function ShareFileScreen() {
           {loading ? 'Envoi...' : 'Partager'}
         </Text>
       </TouchableOpacity>
-      {/* Affichage debug */}
       <View style={{ marginTop: 16 }}>
         <Text style={{ color: '#fff', fontSize: 12 }}>
           {file ? JSON.stringify(file, null, 2) : 'Aucun fichier sélectionné'}
