@@ -1,6 +1,8 @@
 export const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 export async function apiFetch(endpoint: string, options?: RequestInit) {
+  console.log('API FETCH:', options?.method, endpoint);
+
   const url = `${API_BASE_URL}${endpoint}`;
   const isFormData = options?.body instanceof FormData;
   const isGet = !options?.method || options.method.toUpperCase() === 'GET';
