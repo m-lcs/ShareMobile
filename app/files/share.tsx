@@ -46,7 +46,7 @@ export default function ShareFileScreen() {
 
   const handleShareFile = async () => {
     console.log('Tentative de partage du fichier:', file);
-    if (!file || !file.name || !file.uri) {
+    if (!file || !file.name) {
       Alert.alert('Erreur', 'Veuillez sélectionner un fichier.');
       console.log('Erreur: fichier non sélectionné ou incomplet');
       return;
@@ -67,12 +67,20 @@ export default function ShareFileScreen() {
 
     setLoading(true);
     try {
+      const isWeb = Platform.OS === 'web';
       const formData = isWeb ? new window.FormData() : new FormData();
 
+      // --- Correction principale ---
+      // Sur le web, il faut absolument envoyer un objet File natif JS dans le champ 'file'
       if (isWeb && file.file instanceof File) {
         formData.append('file', file.file, file.name);
       } else if (isWeb && file instanceof File) {
         formData.append('file', file, file.name);
+      } else if (isWeb && file.uri && file.name && file.mimeType) {
+        const res = await fetch(file.uri);
+        const blob = await res.blob();
+        const jsFile = new File([blob], file.name, { type: file.mimeType });
+        formData.append('file', jsFile, file.name);
       } else {
         formData.append('file', {
           uri: file.uri,
@@ -85,6 +93,7 @@ export default function ShareFileScreen() {
               : 'image/jpeg',
         } as any);
       }
+
       formData.append('nom_original', file.name);
       formData.append('nom_serveur', `server_${file.name}`);
       formData.append('date_envoi', new Date().toISOString());
