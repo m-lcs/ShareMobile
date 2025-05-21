@@ -11,7 +11,6 @@ const MAX_SIZE = 200 * 1024;
 
 export default function ShareFileScreen() {
   const [file, setFile] = useState<any>(null);
-
   const [loading, setLoading] = useState(false);
 
   const handlePickFile = async () => {
@@ -26,11 +25,17 @@ export default function ShareFileScreen() {
       multiple: false,
     });
     if (result.type === 'success') {
+      // Correction : sur mobile natif, result contient .uri, .name, .size à la racine
+      // Sur web, il peut y avoir .assets[0]
       if ((result as any).assets && Array.isArray((result as any).assets) && (result as any).assets.length > 0) {
         setFile((result as any).assets[0]);
-      } else {
+      } else if (result.uri && result.name) {
         setFile(result);
+      } else {
+        setFile(null);
       }
+    } else {
+      setFile(null);
     }
   };
 
@@ -73,8 +78,6 @@ export default function ShareFileScreen() {
       await apiFetch('/fichiers', {
         method: 'POST',
         body: formData,
-        headers: {
-        },
       });
 
       Alert.alert('Succès', 'Fichier partagé avec succès.');
