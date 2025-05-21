@@ -68,16 +68,21 @@ export default function ShareFileScreen() {
     setLoading(true);
     try {
       const formData = isWeb ? new window.FormData() : new FormData();
-      formData.append('file', {
-        uri: file.uri,
-        name: file.name,
-        type:
-          ext === 'pdf'
-            ? 'application/pdf'
-            : ext === 'png'
-            ? 'image/png'
-            : 'image/jpeg',
-      } as any);
+
+      if (isWeb && file.file instanceof File) {
+        formData.append('file', file.file, file.name);
+      } else {
+        formData.append('file', {
+          uri: file.uri,
+          name: file.name,
+          type:
+            ext === 'pdf'
+              ? 'application/pdf'
+              : ext === 'png'
+              ? 'image/png'
+              : 'image/jpeg',
+        } as any);
+      }
       formData.append('nom_original', file.name);
       formData.append('nom_serveur', `server_${file.name}`);
       formData.append('date_envoi', new Date().toISOString());
@@ -90,6 +95,7 @@ export default function ShareFileScreen() {
       await apiFetch('/fichiers', {
         method: 'POST',
         body: formData,
+        // Ne PAS mettre de headers ici !
       });
 
       Alert.alert('Succès', 'Fichier partagé avec succès.');
