@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, View, Text, Platform, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, FlatList, View, Text, Platform, Image, TouchableOpacity, Alert } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { apiFetch } from '@/constants/api';
 import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 type File = {
   id: number;
@@ -23,7 +25,7 @@ type User = {
 };
 
 const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-const SERVER_URL = 'http://192.168.1.100:8000'; // Remplace par l'IP de ton PC
+const SERVER_URL = 'http://192.168.1.100:8000';
 
 function FileImage({ imageUrl }: { imageUrl: string }) {
   const [imageError, setImageError] = useState(false);
@@ -91,6 +93,29 @@ export default function HomeScreen() {
     return `Utilisateur (${id})`;
   };
 
+  const handleDownload = async (item: File) => {
+    try {
+      const fileUrl = `${SERVER_URL}/uploads/${item.nomServeur}`;
+      const fileExt = item.extension?.toLowerCase() || 'file';
+      const fileName = item.nomOriginal || `fichier.${fileExt}`;
+      const fileUri = FileSystem.cacheDirectory + fileName;
+
+      const downloadResumable = FileSystem.createDownloadResumable(
+        fileUrl,
+        fileUri
+      );
+      const { uri } = await downloadResumable.downloadAsync();
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri);
+      } else {
+        Alert.alert('Téléchargement', `Fichier téléchargé à : ${uri}`);
+      }
+    } catch (e) {
+      Alert.alert('Erreur', "Impossible de télécharger ce fichier.");
+    }
+  };
+
   const renderItem = ({ item }: { item: File }) => {
     const isImage = IMAGE_EXTENSIONS.includes(item.extension?.toLowerCase());
     const imageUrl = isImage
@@ -109,6 +134,12 @@ export default function HomeScreen() {
           <ThemedText style={styles.fileMeta}>📄 {item.extension?.toUpperCase()}</ThemedText>
           <ThemedText style={styles.fileMeta}>💾 {(item.taille / 1024).toFixed(2)} Ko</ThemedText>
         </View>
+        <TouchableOpacity
+          style={styles.downloadButton}
+          onPress={() => handleDownload(item)}
+        >
+          <Text style={styles.downloadButtonText}>Télécharger</Text>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -251,5 +282,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 0.5,
+  },
+  downloadButton: {
+    marginTop: 10,
+    backgroundColor: '#32CD32',
+    borderRadius: 18,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+  },
+  downloadButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
 });
