@@ -26,17 +26,16 @@ export default function ShareFileScreen() {
       multiple: false,
     });
     console.log('Résultat picker:', result);
-    if (result.type === 'success') {
-      if ((result as any).assets && Array.isArray((result as any).assets) && (result as any).assets.length > 0) {
-        setFile((result as any).assets[0]);
-        console.log('Fichier sélectionné (assets[0]):', (result as any).assets[0]);
-      } else if (result.uri && result.name) {
-        setFile(result);
-        console.log('Fichier sélectionné (direct):', result);
-      } else {
-        setFile(null);
-        console.log('Aucun fichier sélectionné');
-      }
+
+    if ((result as any).assets && Array.isArray((result as any).assets) && (result as any).assets.length > 0) {
+      setFile((result as any).assets[0]);
+      console.log('Fichier sélectionné (assets[0]):', (result as any).assets[0]);
+    } else if ((result as any).canceled === false && (result as any).assets && (result as any).assets.length === 0) {
+      setFile(null);
+      console.log('Aucun fichier sélectionné');
+    } else if (result.type === 'success' && result.uri && result.name) {
+      setFile(result);
+      console.log('Fichier sélectionné (direct):', result);
     } else {
       setFile(null);
       console.log('Sélection annulée');
