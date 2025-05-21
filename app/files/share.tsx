@@ -14,6 +14,7 @@ export default function ShareFileScreen() {
   const [loading, setLoading] = useState(false);
 
   const handlePickFile = async () => {
+    console.log('Ouverture du picker...');
     const result = await DocumentPicker.getDocumentAsync({
       type: [
         'application/pdf',
@@ -24,24 +25,29 @@ export default function ShareFileScreen() {
       copyToCacheDirectory: true,
       multiple: false,
     });
+    console.log('Résultat picker:', result);
     if (result.type === 'success') {
-      // Correction : sur mobile natif, result contient .uri, .name, .size à la racine
-      // Sur web, il peut y avoir .assets[0]
       if ((result as any).assets && Array.isArray((result as any).assets) && (result as any).assets.length > 0) {
         setFile((result as any).assets[0]);
+        console.log('Fichier sélectionné (assets[0]):', (result as any).assets[0]);
       } else if (result.uri && result.name) {
         setFile(result);
+        console.log('Fichier sélectionné (direct):', result);
       } else {
         setFile(null);
+        console.log('Aucun fichier sélectionné');
       }
     } else {
       setFile(null);
+      console.log('Sélection annulée');
     }
   };
 
   const handleShareFile = async () => {
+    console.log('Tentative de partage du fichier:', file);
     if (!file || !file.name || !file.uri) {
       Alert.alert('Erreur', 'Veuillez sélectionner un fichier.');
+      console.log('Erreur: fichier non sélectionné ou incomplet');
       return;
     }
 
@@ -49,10 +55,12 @@ export default function ShareFileScreen() {
     const size = file.size ?? 0;
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
       Alert.alert('Erreur', 'Seuls les fichiers PDF, PNG, JPEG, JPG sont autorisés.');
+      console.log('Erreur: extension non autorisée', ext);
       return;
     }
     if (size > MAX_SIZE) {
       Alert.alert('Erreur', 'Le fichier ne doit pas dépasser 200 Ko.');
+      console.log('Erreur: fichier trop volumineux', size);
       return;
     }
 
@@ -75,6 +83,8 @@ export default function ShareFileScreen() {
       formData.append('extension', ext);
       formData.append('taille', `${size}`);
 
+      console.log('FormData prêt à l\'envoi:', formData);
+
       await apiFetch('/fichiers', {
         method: 'POST',
         body: formData,
@@ -82,8 +92,10 @@ export default function ShareFileScreen() {
 
       Alert.alert('Succès', 'Fichier partagé avec succès.');
       setFile(null);
+      console.log('Fichier partagé avec succès');
     } catch (error) {
       Alert.alert('Erreur', 'Échec du partage du fichier.');
+      console.log('Erreur lors de l\'envoi:', error);
     } finally {
       setLoading(false);
     }
@@ -123,6 +135,12 @@ export default function ShareFileScreen() {
           {loading ? 'Envoi...' : 'Partager'}
         </Text>
       </TouchableOpacity>
+      {/* Affichage debug */}
+      <View style={{ marginTop: 16 }}>
+        <Text style={{ color: '#fff', fontSize: 12 }}>
+          {file ? JSON.stringify(file, null, 2) : 'Aucun fichier sélectionné'}
+        </Text>
+      </View>
     </ThemedView>
   );
 }
